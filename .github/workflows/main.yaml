@@ -3,17 +3,12 @@ name: Publish Static Web App to Azure Blob Storage
 on: push
 
 jobs:
-  build_and_publish:
+  build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v1
-
-    - name: Login to Azure
-      uses: Azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
     - name: Install npm packages
       shell: bash
@@ -30,6 +25,28 @@ jobs:
       run: |
         npm run test
 
+    - name: Upload app
+      uses: actions/upload-artifact@v1
+      with:
+        name: app
+        path: build
+
+  deploy_to_dev:     
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download app
+      uses: actions/download-artifact@v1
+      with:
+        name: app
+        path: build
+        
+    - name: Login to Azure
+      uses: Azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+  
     - name: Publish app
       uses: Azure/cli@v1.0.0
       with:
